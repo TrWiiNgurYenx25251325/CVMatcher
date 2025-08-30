@@ -1,0 +1,458 @@
+@page "{id:int}"
+@model SEP490_SU25_G86_Client.Pages.Job.DetailJobPostModel
+@{
+    ViewData["Title"] = "Chi tiết tin tuyển dụng";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<link rel="stylesheet" href="~/css/detail-job.css" asp-append-version="true">
+<div class="container py-5">
+    <div class="row">
+        <!-- Bên trái: Nội dung chính -->
+        <div class="col-lg-8 mb-4">
+            <div class="job-header d-flex align-items-center mb-4">
+                <div class="text-wrap">
+                    <div class="job-title mb-1">@Model.JobPostDetail?.Title</div>
+
+                    <!-- META: Lương / Địa điểm / Kinh nghiệm -->
+                    <div class="d-flex justify-content-evenly mt-2 flex-wrap gap-2 w-100 meta-row">
+                        <span class="meta-pill flex-fill text-center">
+                            <i class="bi bi-cash me-1"></i>
+                            @(Model.JobPostDetail?.SalaryRangeName ?? "Thỏa thuận")
+                        </span>
+                        <span class="meta-pill flex-fill text-center">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            @(Model.JobPostDetail?.ProvinceName ?? "Không xác định")
+                        </span>
+                        <span class="meta-pill flex-fill text-center">
+                            <i class="bi bi-person-workspace me-1"></i>
+                            @(Model.JobPostDetail?.ExperienceLevelName ?? "Không yêu cầu")
+                        </span>
+                    </div>
+                    <!-- DEADLINE -->
+                    <div class="deadline-badge mt-3">
+                        <i class="bi bi-clock-history me-2"></i>
+                        <b>Hạn nộp hồ sơ:</b>
+                        <span>
+                            @(Model.JobPostDetail?.EndDate.HasValue == true
+                                                        ? Model.JobPostDetail.EndDate.Value.ToString("dd/MM/yyyy")
+                                                        : "Không xác định")
+                        </span>
+                    </div>
+                    <!-- ACTION: Ứng tuyển ngay / Lưu tin -->
+                    @if (Model.CurrentUserRole != "EMPLOYER")
+                    {
+                        <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
+                            <button class="btn btn-apply" id="btnApplyNow">
+                                <i class="bi bi-send"></i> Ứng tuyển ngay
+                            </button>
+
+                            @if (Model.CurrentUserId != null)
+                            {
+                                <button id="saveButton" class="btn btn-save-outline @(Model.IsSaved ? "active" : "")">
+                                    <i class="bi bi-heart"></i> @(Model.IsSaved ? "Đã lưu tin" : "Lưu tin")
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <!-- THẺ TRẮNG CHỨA 4 MỤC -->
+            <div class="card white-section p-4 mb-4">
+                <h5 class="fw-bold mb-2">
+                    <i class="bi bi-file-earmark-text me-2"></i>Mô tả công việc
+                </h5>
+                <div class="mb-4 job-desc">
+                    @Html.Raw(Model.JobPostDetail?.Description)
+                </div>
+
+                <h5 class="fw-bold mb-2"><i class="bi bi-list-check me-2"></i>Yêu cầu ứng viên</h5>
+                <div class="mb-4 job-desc">
+                    @Html.Raw(Model.JobPostDetail?.CandidaterRequirements)
+                </div>
+
+                <h5 class="fw-bold mb-2"><i class="bi bi-lightbulb me-2"></i>Kỹ năng chuyên môn</h5>
+                <div class="mb-4 job-desc">
+                    @Html.Raw(Model.JobPostDetail?.Interest)
+                </div>
+                <h5 class="fw-bold mb-2"><i class="bi bi-geo-alt me-2"></i>Địa điểm làm việc</h5>
+                <div class="mb-4 job-desc">
+                    @Html.Raw(Model.JobPostDetail?.WorkLocation)
+                </div>
+            </div>
+            <!-- VIỆC LÀM LIÊN QUAN -->
+            @if (Model.RelatedJobs != null && Model.RelatedJobs.Count > 0)
+            {
+                <div class="card white-section p-4 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-briefcase me-2"></i>
+                            Việc làm liên quan
+                            @if (!string.IsNullOrWhiteSpace(Model.JobPostDetail?.IndustryName))
+                            {
+                                <span>của @Model.JobPostDetail.IndustryName</span>
+                            }
+                        </h5>
+                        <small class="text-muted">@Model.RelatedJobs.Count việc phù hợp</small>
+                    </div>
+
+                    <div class="row g-3">
+                        @foreach (var j in Model.RelatedJobs)
+                        {
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <a class="related-card d-block h-100" href="/Job/DetailJobPost/@j.JobPostId">
+                                    <div class="p-3 h-100 d-flex flex-column">
+                                        <div class="fw-bold text-truncate mb-1" title="@j.Title">@j.Title</div>
+                                        <div class="text-muted small mb-2 text-truncate" title="@j.CompanyName">
+                                            <i class="bi bi-building me-1"></i>@(j.CompanyName ?? "—")
+                                        </div>
+                                        <div class="mt-auto small d-flex flex-wrap gap-2">
+                                            <span class="badge rounded-pill bg-light text-dark border">
+                                                <i class="bi bi-geo-alt me-1"></i>@(j.ProvinceName ?? "Không xác định")
+                                            </span>
+                                            <span class="badge rounded-pill bg-light text-dark border">
+                                                <i class="bi bi-cash me-1"></i>
+                                                @(string.IsNullOrWhiteSpace(j.SalaryRangeName) ? "Thỏa thuận" : j.SalaryRangeName)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card white-section p-4 mb-4">
+                    <h5 class="fw-bold mb-2">
+                        <i class="bi bi-briefcase me-2"></i>
+                        Việc làm liên quan
+                        @if (!string.IsNullOrWhiteSpace(Model.JobPostDetail?.IndustryName))
+                        {
+                            <span class="text-primary">của @Model.JobPostDetail.IndustryName</span>
+                        }
+                    </h5>
+                    <div class="text-muted">Chưa có việc làm liên quan.</div>
+                </div>
+            }
+        </div>
+        <!-- Bên phải: Tổng quan & Liên hệ -->
+        <div class="col-lg-4">
+            <!-- Bên phải: Công ty -->
+            <div class="card company-card p-4 mb-4">
+                <div class="d-flex align-items-start gap-3">
+                    <img src="@Model.JobPostDetail?.LogoUrl"
+                         alt="Logo công ty"
+                         class="rounded-3 border"
+                         style="width:64px;height:64px;object-fit:cover;" />
+
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="fw-bold fs-5 mb-1 company-title">
+                            @Model.JobPostDetail?.CompanyName
+                        </div>
+
+                        <ul class="list-unstyled mb-2 small">
+                            <li class="mb-1">
+                                <i class="bi bi-people me-2"></i>
+                                <span class="text-muted">Quy mô:</span> @Model.JobPostDetail?.CompanySize
+                            </li>
+                            <li class="mb-1">
+                                <i class="bi bi-box me-2"></i>
+                                <span class="text-muted">Lĩnh vực:</span> @Model.JobPostDetail?.IndustryName
+                            </li>
+                            <li class="mb-1 company-address">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                <span class="text-muted">Địa điểm:</span> @Model.JobPostDetail?.Address
+                            </li>
+                        </ul>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.JobPostDetail?.Website))
+                        {
+                            <a href="@Model.JobPostDetail!.Website" target="_blank" rel="noopener" class="text-success fw-semibold">
+                                Xem trang công ty <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card card-custom p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Thông tin tổng quan</h5>
+                <ul class="list-unstyled mb-3">
+                    <li class="mb-2"><i class="bi bi-briefcase me-2"></i> <b>Vị trí:</b> @Model.JobPostDetail?.Title</li>
+                    <li class="mb-2"><i class="bi bi-clipboard me-2"></i> <b>Hình thức làm việc:</b> @Model.JobPostDetail?.EmploymentTypeName</li>
+                    <li class="mb-2"><i class="bi bi-tags me-2"></i> <b>Lĩnh Vực:</b> @Model.JobPostDetail?.IndustryName</li>
+                    <li class="mb-2"><i class="bi bi-mortarboard me-2"></i> <b>Cấp bậc:</b> @Model.JobPostDetail?.JobLevelName</li>
+                </ul>
+            </div>
+            <div class="card card-custom p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-envelope me-2"></i>Liên hệ với chúng tôi</h5>
+                <form>
+                    <input class="form-control mb-2" placeholder="Họ và tên" />
+                    <input class="form-control mb-2" placeholder="Địa chỉ email" />
+                    <input class="form-control mb-2" placeholder="Số điện thoại" />
+                    <textarea class="form-control mb-2" placeholder="Nội dung tin nhắn"></textarea>
+                    <button class="btn btn-save w-100">Gửi tin nhắn</button>
+                </form>
+            </div>
+            @if (Model.JobPostDetail?.CvTemplateId != null)
+            {
+                <div class="card shadow border-0 mt-3 mb-2 d-flex flex-row align-items-center" style="background:#f4faff; min-width:320px; max-width:370px;">
+                    <div class="flex-grow-1 p-3">
+                        <div class="fw-bold mb-1">Mẫu CV dành cho ứng viên</div>
+                        <div class="mb-2 small">Tên template: <span class="fw-semibold">@Model.JobPostDetail.CvTemplateName</span></div>
+                        <div class="d-flex gap-2">
+                            @if (!string.IsNullOrEmpty(Model.JobPostDetail.PdfFileUrl))
+                            {
+                                <a href="https://docs.google.com/gview?url=@(Uri.EscapeDataString(Model.JobPostDetail.PdfFileUrl))&embedded=true" target="_blank" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-pdf"></i> Xem PDF</a>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.JobPostDetail.DocFileUrl))
+                            {
+                                <a href="@Model.JobPostDetail.DocFileUrl" download class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-word"></i> Tải DOC</a>
+                            }
+                        </div>
+                    </div>
+                    <div class="p-2 pe-3">
+                        <img src="/assets/images/8347432.png" alt="PDF Preview" style="width:54px;height:70px;object-fit:contain;" onerror="this.onerror=null;this.style.display='none';this.parentElement.innerHTML='<i class='bi bi-file-pdf text-danger' style='font-size:2.5rem;'></i>'"> 
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal ứng tuyển -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Ứng tuyển: @Model.JobPostDetail?.Title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <h6 class="fw-bold mb-3">Chọn CV để ứng tuyển</h6>
+          <div id="cvList">
+            @if (Model.MyCvs != null && Model.MyCvs.Count > 0)
+            {
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60%;">Tên CV</th>
+                            <th style="width: 30%;">Ngày cập nhật</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var cv in Model.MyCvs)
+                    {
+                        <tr id="cv-row-@cv.CvId">
+                            <td>@cv.CVName</td>
+                            <td>@(cv.UpdatedDate?.ToString("dd-MM-yyyy HH:mm") ?? "")</td>
+                            <td>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectCv('@cv.CvId')">Chọn</button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="text-danger">Bạn chưa có CV nào. Vui lòng tải lên CV mới!</div>
+            }
+          </div>
+        </div>
+        <hr/>
+        <div>
+          <h6 class="fw-bold mb-2">Tải CV lên từ thiết bị</h6>
+          <input type="file" id="uploadCvInput" accept="application/pdf" class="form-control mb-2"/>
+          <div class="mt-2">
+            <label for="uploadCvName" class="form-label">Tên CV</label>
+            <input type="text" id="uploadCvName" class="form-control" placeholder="Nhập tên CV" />
+          </div>
+          <div class="mt-2">
+            <label for="uploadCvNotes" class="form-label">Ghi chú</label>
+            <textarea id="uploadCvNotes" class="form-control" placeholder="Nhập ghi chú (tuỳ chọn)"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-main" id="btnSubmitApplication">Nộp hồ sơ ứng tuyển</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="uploadSpinner" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(255,255,255,0.7);align-items:center;justify-content:center;flex-direction:column;">
+  <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;">
+    <span class="visually-hidden">Đang tải lên...</span>
+  </div>
+  <div style="margin-top:16px;font-size:18px;">Đang tải lên CV, vui lòng chờ...</div>
+</div>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
+<script>
+        const jwtToken = ('@HttpContext.Session.GetString("jwt_token")' || '').trim();
+        let selectedCvId = null;
+        const candidateId = ('@HttpContext.Session.GetString("userId")' || '').trim();
+
+//chiennk 23/07/2025 (saved job button)
+        let isSaved = @(Model.IsSaved.ToString().ToLower());
+            let jobPostId = @Model.JobPostDetail?.JobPostId;
+                    const saveBtn = document.getElementById("saveButton");
+            if (saveBtn) {
+                let isSaved = @(Model.IsSaved.ToString().ToLower());
+                saveBtn.addEventListener('click', function () {
+                    if (!candidateId) {
+                        window.location.href = '/Common/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                        return;
+                    }
+
+                    if (!isSaved) {
+                        // Gọi API lưu công việc
+                        fetch('https://localhost:7004/api/SavedJobs/save', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + jwtToken
+                            },
+                            body: JSON.stringify({
+                                userId: candidateId,
+                                jobPostId: jobPostId
+                            })
+                        })
+                        .then(res => {
+                            if (res.ok) {
+                                isSaved = true;
+                                saveBtn.textContent = "Đã Lưu";
+                                        saveBtn.classList.remove("active");
+                                        saveBtn.classList.add("active");
+                            } else {
+                                alert("Không thể lưu công việc.");
+                            }
+                        });
+                    } else {
+                        // Gọi API lấy danh sách đã lưu để tìm saveJobId
+                        fetch(`https://localhost:7004/api/SavedJobs/user/${candidateId}`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + jwtToken
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            let match = data.find(x => x.jobPostId === jobPostId);
+                            if (!match) {
+                                alert("Không tìm thấy công việc đã lưu.");
+                                return;
+                            }
+
+                            let saveJobId = match.saveJobId;
+
+                            // Gọi API xóa job đã lưu
+                            fetch(`https://localhost:7004/api/SavedJobs/${saveJobId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': 'Bearer ' + jwtToken
+                                }
+                            })
+                            .then(res => {
+                                if (res.ok) {
+                                    isSaved = false;
+                                    saveBtn.textContent = "Lưu Tin";
+                                            saveBtn.classList.remove("active");
+                                            saveBtn.classList.add("active");
+                                } else {
+                                    alert("Không thể hủy lưu công việc.");
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+//end chiennk edit
+
+        const btnApply = document.getElementById('btnApplyNow');
+        if (btnApply) {
+            btnApply.addEventListener('click', function () {
+                if (!candidateId) {
+                    window.location.href = '/Common/Login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+                    return;
+                }
+                const modalElement = document.getElementById('applyModal');
+                if (modalElement) {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            });
+        }
+
+window.selectCv = function(cvId) {
+    selectedCvId = cvId;
+    // Bỏ highlight tất cả
+    document.querySelectorAll('#cvList tr').forEach(tr => tr.classList.remove('selected'));
+    // Highlight dòng được chọn
+    var row = document.getElementById('cv-row-' + cvId);
+    if (row) row.classList.add('selected');
+};
+        const btnSubmit = document.getElementById('btnSubmitApplication');
+                if (btnSubmit) {
+            btnSubmit.addEventListener('click', function () {
+                        document.getElementById('btnSubmitApplication').addEventListener('click', function() {
+            if (selectedCvId) {
+                // Nộp bằng CV có sẵn
+                fetch('https://localhost:7004/api/AppliedJobs/apply-existing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    body: JSON.stringify({
+                        jobPostId: @Model.JobPostDetail?.JobPostId,
+                        cvId: selectedCvId,
+                        candidateId: candidateId
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || 'Ứng tuyển thành công!');
+                    location.reload();
+                })
+                .catch(() => alert('Lỗi khi ứng tuyển!'));
+            } else {
+                // Nộp bằng CV upload mới
+                let file = document.getElementById('uploadCvInput').files[0];
+                let cvName = document.getElementById('uploadCvName').value;
+                let notes = document.getElementById('uploadCvNotes').value;
+                if (!file) { alert('Vui lòng chọn hoặc upload CV!'); return; }
+                if (!cvName) { alert('Vui lòng nhập tên CV!'); return; }
+                document.getElementById('uploadSpinner').style.display = 'flex'; // Hiện spinner
+                let formData = new FormData();
+                formData.append('jobPostId', @Model.JobPostDetail?.JobPostId);
+                formData.append('candidateId', candidateId);
+                formData.append('file', file);
+                formData.append('CVName', cvName);
+                if (notes) formData.append('Notes', notes);
+                fetch('https://localhost:7004/api/AppliedJobs/apply-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('uploadSpinner').style.display = 'none'; // Ẩn spinner
+                    alert(data.message || 'Ứng tuyển thành công!');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 100);
+                })
+                .catch(() => {
+                    document.getElementById('uploadSpinner').style.display = 'none'; // Ẩn spinner
+                    alert('Lỗi khi ứng tuyển!');
+                });
+            }
+        });
+            });
+        }
+</script>
+} 

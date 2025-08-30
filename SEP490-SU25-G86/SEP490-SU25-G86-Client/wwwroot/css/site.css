@@ -1,0 +1,228 @@
+/*LAYOUT daefaut*/
+html {
+    font-size: 14px;
+}
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    margin-bottom: 60px;
+}
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* HEADER CUSTOM mới - trắng đen, logo trái, nav giữa, nút phải */
+.header-container {
+    background-color: #fff;
+    color: #222;
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #222;
+    margin-left: 40px;
+    margin-right: 0;
+}
+.logo i {
+    font-size: 1.7rem;
+    color: #198754;
+}
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex: 1;
+    justify-content: center;
+}
+.nav a {
+    color: #222;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.nav a:hover, .nav a.active {
+    color: #198754;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 40px;
+}
+.btn-outline-light, .btn-success {
+    font-weight: 500;
+}
+.btn-outline-light {
+    color: #198754;
+    border-color: #198754;
+    background: #fff;
+}
+.btn-outline-light:hover {
+    background: #198754;
+    color: #fff;
+}
+.btn-success {
+    background: #198754;
+    border: none;
+}
+
+/* FOOTER mới - trắng đen, căn giữa */
+.footer-container {
+    background-color: #fff;
+    color: #222;
+    padding: 30px 0 10px 0;
+    border-top: 1px solid #eee;
+}
+.footer-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 60px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.footer-container h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.footer-container .items {
+    min-width: 180px;
+    text-align: center;
+}
+.footer-container a {
+    color: #222;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 5px;
+    transition: color 0.2s;
+}
+.footer-container a:hover {
+    color: #198754;
+}
+.newsletter input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    width: 140px;
+}
+.newsletter button {
+    padding: 10px 20px;
+    background-color: #198754;
+    color: #fff;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+.text-muted {
+    color: #888 !important;
+}
+.footer-container .text-center {
+    text-align: center;
+}
+/* cập nhật thêm Footer n */
+.footer-card {
+    border-radius: 12px;
+    color: #fff;
+    padding: 1rem;
+    height: 100%;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+
+    .footer-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+
+    /* Màu pastel dạng gradient */
+    .footer-card.blue {
+        background: linear-gradient(135deg, #a1c4fd, #c2e9fb); /* xanh pastel nhạt */
+        color: #1a2a6c;
+    }
+
+    .footer-card.yellow {
+        background: linear-gradient(135deg, #fddb92, #d1fdff); /* vàng pastel */
+        color: #7b5e00;
+    }
+
+    .footer-card.pink {
+        background: linear-gradient(135deg, #fbc2eb, #a6c1ee); /* hồng tím pastel */
+        color: #5a2a5a;
+    }
+
+    .footer-card.green {
+        background: linear-gradient(135deg, #d4fc79, #96e6a1); /* xanh lá pastel */
+        color: #1b4d2e;
+    }
+
+    .footer-card a {
+        color: inherit;
+        font-weight: 600;
+    }
+
+        .footer-card a:hover {
+            text-decoration: underline;
+        }
+
+/* Dropdown submenu cho Bootstrap 5 */
+.dropdown-submenu {
+    position: relative;
+}
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    right: 100%;
+    left: auto;
+    margin-top: -6px;
+    display: none;
+    min-width: 200px;
+    position: absolute;
+    z-index: 1051;
+}
+.dropdown-submenu:hover > .dropdown-menu,
+.dropdown-submenu:focus-within > .dropdown-menu {
+    display: block;
+}
+
+.notification-dropdown .notif-dot {
+    position: absolute;
+    right: -2px;
+    top: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #dc3545; /* đỏ */
+}
+
+.notification-item {
+    cursor: pointer;
+}
+
+    .notification-item.unread {
+        background: #f8f9fa;
+        font-weight: 500;
+    }
+
+.notification-content {
+    white-space: normal;
+    line-height: 1.2;
+}

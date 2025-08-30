@@ -1,0 +1,328 @@
+﻿@page
+@model SEP490_SU25_G86_Client.Pages.Common.CompanyDetailModel
+@{
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" />
+
+<div id="session-data" data-user-id="@HttpContext.Session.GetString("userId")"></div>
+<div class="company-header">
+    <div class="d-flex align-items-center">
+        <div class="rounded-circle overflow-hidden me-3" style="width: 70px; height: 70px;">
+            <img src="@(Model.Company?.LogoUrl ?? "/images/default-company-logo.png")"
+                 class="img-fluid"
+                 style="width: 100%; height: 100%; object-fit: cover;"
+                 alt="Logo Công ty" />
+        </div>
+        <div>
+            <h4 class="mb-1">@Model.Company?.CompanyName</h4>
+            <div class="d-flex flex-wrap gap-3">
+                @if (!string.IsNullOrWhiteSpace(Model.Company?.Website))
+                {
+                    <span><i class="bi bi-globe"></i> <a href="@Model.Company.Website" class="text-white text-decoration-underline">@Model.Company.Website</a></span>
+                }
+                <span><i class="bi bi-buildings"></i> @Model.Company?.CompanySize nhân viên</span>
+                <span><i class="bi bi-people"></i> @Model.Company?.FollowersCount người theo dõi</span>
+            </div>
+        </div>
+    </div>
+    <div>
+        @if (Model.Role == "EMPLOYER")
+    {
+        }
+        else
+        {
+            @if (Model.IsBlocked)
+            {
+                <button id="followButton" class="btn btn-light text-success fw-bold" data-company-id="@Model.Id" >+ Theo dõi công ty</button>
+                <button id="blockButton" class="btn btn-secondary fw-bold" data-company-id="@Model.Id">✔ Đã chặn công ty</button>
+            }
+            else if (Model.IsFollowing)
+            {
+                <button id="followButton" class="btn btn-secondary fw-bold" data-company-id="@Model.Id">✔ Đang theo dõi</button>
+                <button id="blockButton" class="btn btn-light text-danger fw-bold" data-company-id="@Model.Id">✖ Chặn công ty</button>
+            }
+            else
+            {
+                <button id="followButton" class="btn btn-light text-success fw-bold" data-company-id="@Model.Id">+ Theo dõi công ty</button>
+                <button id="blockButton" class="btn btn-light text-danger fw-bold" data-company-id="@Model.Id">✖ Chặn công ty</button>
+            }
+        }
+        
+    </div>
+</div>
+
+<!-- Company Info and Location -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card p-4 shadow rounded">
+            <h5 class="fw-bold">Giới thiệu công ty</h5>
+            <p>@Model.Company?.Description</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 shadow rounded">
+            <p><strong>Địa chỉ công ty:</strong></p>
+            <p>@Model.Company?.Address</p>
+            @* <img src="https://maps.googleapis.com/maps/api/staticmap?center=@Uri.EscapeDataString(Model.Company?.Address ?? "")&zoom=16&size=600x300&key=YOUR_API_KEY" class="img-fluid rounded" /> *@
+        </div>
+    </div>
+</div>
+
+<!-- Job Listings -->
+<div class="mt-5">
+    <h4 class="fw-bold mb-3">Tuyển dụng</h4>
+
+    @if (Model.JobPosts.Any())
+    {
+        foreach (var job in Model.JobPosts)
+        {
+            <div class="bg-white border rounded p-3 mb-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mt-1">@job.Title</h5>
+                    <div class="text-muted">@job.CompanyName</div>
+                    <div class="d-flex flex-wrap mt-2 gap-3">
+                        <span class="text-secondary"><i class="bi bi-building"></i> @job.Industry</span>
+                        <span class="text-secondary"><i class="bi bi-clock"></i> @job.EmploymentType</span>
+                        <span class="text-secondary"><i class="bi bi-currency-dollar"></i> @job.Salary</span>
+                        <span class="text-secondary"><i class="bi bi-person-workspace"></i> @job.ExperienceLevel</span>
+                        <span class="text-secondary"><i class="bi bi-geo-alt"></i> @job.Location</span>
+                    </div>
+                </div>
+                <div>
+                    <a class="btn btn-custom btn-sm" href="/Job/DetailJobPost/@job.JobPostId">Chi tiết</a>
+                </div>
+            </div>
+        }
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center mt-4">
+                <nav>
+                    <ul class="pagination">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?id=@Model.Company?.CompanyId&page=@(Model.CurrentPage - 1)">←</a>
+                            </li>
+                        }
+
+                        <li class="page-item disabled">
+                            <span class="page-link">@Model.CurrentPage / @Model.TotalPages</span>
+                        </li>
+
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?id=@Model.Company?.CompanyId&page=@(Model.CurrentPage + 1)">→</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-muted">Không có tin tuyển dụng nào.</div>
+    }
+</div>
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                Đã theo dõi công ty thành công.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+<!-- Modal Lí do chặn công ty -->
+<div class="modal fade" id="blockReasonModal" tabindex="-1" aria-labelledby="blockReasonModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blockReasonModalLabel">Lí do bạn chặn công ty</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="blockReasonInput" class="form-control" rows="3" placeholder="Nhập lý do (tùy chọn)"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <button type="button" class="btn btn-warning" id="blockNoReasonButton">Chặn không lý do</button>
+                <button type="button" class="btn btn-danger" id="blockWithReasonButton">Chặn</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const token = '@HttpContext.Session.GetString("jwt_token")';
+            const accountId = @Html.Raw(Json.Serialize(Model.UserId));
+
+            function showToast(message, isSuccess = true) {
+                const toastId = 'toast-' + Date.now();
+                const bgClass = isSuccess ? 'bg-success' : 'bg-danger';
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>`;
+
+                // Append to the correct container
+                $('#toastContainer').append(toastHtml);
+
+                // Initialize and show the toast
+                const toastElement = document.getElementById(toastId);
+                if (toastElement) {
+                    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+                    toast.show();
+                } else {
+                    console.error('Toast element not found:', toastId);
+                }
+            }
+            // followButton
+            $('#followButton').click(function () {
+                var companyId = $(this).data('company-id');
+
+                if (!accountId || !token || token === 'null' || accountId === 'null') {
+                    window.location.href = '/Common/Login?returnUrl=' + encodeURIComponent('/Common/CompanyDetail?id=' + companyId);
+                    return;
+                }
+
+                $.ajax({
+                    url: 'https://localhost:7004/api/User/follow',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    data: JSON.stringify({
+                        userId: parseInt(accountId),
+                        companyId: parseInt(companyId)
+                    }),
+                    success: function () {
+                        // --- Xử lý follow ---
+                        const button = $('#followButton');
+                        const blockButton = $('#blockButton');
+                        if (button.text().includes('Đang theo dõi')) {
+                            button.removeClass('btn-secondary').addClass('btn-light text-success');
+                            button.text('+ Theo dõi công ty');
+                            showToast('Đã hủy theo dõi công ty.');
+                        } else {
+                            button.removeClass('btn-light text-success').addClass('btn-secondary');
+                            button.text('✔ Đang theo dõi');
+                            showToast('Đã theo dõi công ty thành công.');
+                        }
+                            // --- Xử lý unblock nếu trước đó đã block ---
+                        if (blockButton.text().includes('✔ Đã chặn công ty')) {
+                            blockButton.removeClass('btn-secondary').addClass('btn-light text-danger');
+                            blockButton.text('✖ Chặn công ty');
+                        }
+                    },
+                    error: function (xhr) {
+                        showToast(xhr.responseJSON?.message || 'Không thể thực hiện hành động.', false);
+                    }
+                });
+            });
+            //blockbutton
+                    $('#blockButton').click(function () {
+            const companyId = $(this).data('company-id');
+            const button = $(this);
+            const followButton = $('#followButton');
+
+            if (!accountId || !token || token === 'null' || accountId === 'null') {
+                window.location.href = '/Common/Login?returnUrl=' + encodeURIComponent('/Common/CompanyDetail?id=' + companyId);
+                return;
+            }
+
+            if (button.text().includes('Chặn công ty')) {
+                // Mở modal trước
+                $('#blockReasonInput').val('');
+                const modal = new bootstrap.Modal(document.getElementById('blockReasonModal'));
+                modal.show();
+                $('#blockReasonModal').data('company-id', companyId);
+            } else {
+                $.ajax({
+                    url: 'https://localhost:7004/api/User/block',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    data: JSON.stringify({
+                        userId: parseInt(accountId),
+                        companyId: parseInt(companyId)
+                    }),
+                    success: function () {
+                        const button = $('#blockButton');
+                        const followButton = $('#followButton');
+                        // --- Xử lý block/unblock ---
+                            button.removeClass('btn-secondary').addClass('btn-light text-danger');
+                            button.text('✖ Chặn công ty');
+                            showToast('Đã bỏ chặn công ty.');
+                    },
+                    error: function (xhr) {
+                        showToast(xhr.responseJSON?.message || 'Không thể thực hiện hành động.', false);
+                    }
+                });
+            }
+        });
+            // --- Event cho modal---
+            function sendBlockRequest(reason) {
+            const companyId = $('#blockReasonModal').data('company-id');
+            $.ajax({
+                url: 'https://localhost:7004/api/User/block',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + token },
+                data: JSON.stringify({
+                    userId: parseInt(accountId),
+                    companyId: parseInt(companyId),
+                    reason: reason
+                }),
+                success: function () {
+                    const button = $('#blockButton');
+                    const followButton = $('#followButton');
+
+                    button.removeClass('btn-light text-danger').addClass('btn-secondary');
+                    button.text('✔ Đã chặn công ty');
+                    showToast('Đã chặn công ty thành công.');
+
+                    if (followButton.text().includes('Đang theo dõi')) {
+                        followButton.removeClass('btn-secondary').addClass('btn-light text-success');
+                        followButton.text('+ Theo dõi công ty');
+                    }
+                },
+                error: function (xhr) {
+                    showToast(xhr.responseJSON?.message || 'Không thể thực hiện hành động.', false);
+                }
+            });
+        }
+            // --- Event cho các nút trong modal ---
+            $('#blockNoReasonButton').click(function () {
+                $('#blockReasonModal').modal('hide');
+                sendBlockRequest(null);
+            });
+
+            $('#blockWithReasonButton').click(function () {
+                const reason = $('#blockReasonInput').val();
+                $('#blockReasonModal').modal('hide');
+                sendBlockRequest(reason);
+            });
+        });
+    </script>
+}

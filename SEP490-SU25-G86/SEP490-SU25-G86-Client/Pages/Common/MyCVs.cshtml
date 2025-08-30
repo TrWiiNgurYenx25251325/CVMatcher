@@ -1,0 +1,251 @@
+@page
+@model SEP490_SU25_G86_Client.Pages.Common.MyCVsModel
+@{
+    ViewData["Title"] = "CV của tôi";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/mycvs.css" />
+<div class="container-cv">
+    <div class="cv-card">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">CV đã tải lên CVMatcher</h4>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadModal" id="btnUploadCv" @(Model.CVs.Count >= 20 ? "disabled" : "")>
+                <i class="bi bi-upload"></i> Tải CV lên
+            </button>
+        </div>
+        @if (Model.CVs.Count >= 20)
+        {
+            <div class="alert alert-warning mt-2 mb-0">
+                Bạn chỉ được tải lên tối đa 20 CV. Vui lòng xóa bớt CV cũ nếu muốn tải lên CV mới.
+            </div>
+        }
+        <div class="card-body">
+            <!-- FILTER FORM -->
+            <form method="get" id="cv-filter-form" class="cv-filter-form row g-2 align-items-end mb-3">
+                <div class="col-md-4">
+                    <label for="SearchName" class="form-label">Tìm kiếm tên CV</label>
+                    <input type="text" class="form-control" id="SearchName" name="SearchName" value="@Request.Query["SearchName"]" placeholder="Nhập tên CV...">
+                </div>
+                <div class="col-md-3">
+                    <label for="DateFrom" class="form-label">Ngày cập nhật (từ)</label>
+                    <input type="date" class="form-control" id="DateFrom" name="DateFrom" value="@Request.Query["DateFrom"]">
+                </div>
+                <div class="col-md-3">
+                    <label for="DateTo" class="form-label">Ngày cập nhật (đến)</label>
+                    <input type="date" class="form-control" id="DateTo" name="DateTo" value="@Request.Query["DateTo"]">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                    <a href="@Url.Page(null, null, null)" class="btn btn-outline-secondary w-100">Xóa lọc</a>
+                </div>
+            </form>
+
+            <div class="table-responsive-cv">
+<table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>TÊN CV</th>
+                        <th>CẬP NHẬT LẦN CUỐI</th>
+                        <th>HÀNH ĐỘNG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.CVs != null && Model.CVs.Count > 0)
+                {
+                    foreach (var cv in Model.CVs)
+                    {
+                        <tr>
+                            <td>@(cv.CVName ?? cv.FileName)</td>
+                           <td>
+                                <span class="cv-date" data-utc="@(cv.UpdatedDate?.ToString("yyyy-MM-ddTHH:mm:ssZ"))">
+                                    @(DateTime.TryParse(cv.UpdatedDate?.ToString(), out var dt) ? dt.ToString("dd-MM-yyyy HH:mm tt") : cv.UpdatedDate)
+                                </span>
+                            </td>
+                            <td>
+                               
+                                <a class="btn btn-info btn-sm" href="@cv.FileUrl" target="_blank">Chi tiết</a>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal" data-cvid="@cv.CvId" data-filename="@cv.CVName">Sửa tên</button>
+                                <a class="btn btn-secondary btn-sm" href="@cv.FileUrl" target="_blank">Tải CV</a>
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" data-cvid="@cv.CvId" @(cv.IsUsed ? "disabled title='CV này đã được dùng để ứng tuyển, không thể xóa'" : "")>Xóa</button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" class="text-center">Chưa có CV nào được tải lên.</td></tr>
+                }
+                </tbody>
+            </table>
+</div>
+            <!-- PHÂN TRANG -->
+<nav aria-label="CV pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item @(Model.PageIndex == 1 ? "disabled" : "")">
+            <a class="page-link" href="@Url.Page(null, null, new {
+                SearchName = Request.Query["SearchName"],
+                DateFrom = Request.Query["DateFrom"],
+                DateTo = Request.Query["DateTo"],
+                PageIndex = Model.PageIndex - 1,
+                PageSize = Model.PageSize
+            }, null)">&laquo;</a>
+        </li>
+        @for (int p = 1; p <= (Model.TotalPages > 0 ? Model.TotalPages : 1); p++)
+        {
+            <li class="page-item @(p == Model.PageIndex ? "active" : "")">
+                <a class="page-link" href="@Url.Page(null, null, new {
+                    SearchName = Request.Query["SearchName"],
+                    DateFrom = Request.Query["DateFrom"],
+                    DateTo = Request.Query["DateTo"],
+                    PageIndex = p,
+                    PageSize = Model.PageSize
+                }, null)">@p</a>
+            </li>
+        }
+        <li class="page-item @(Model.PageIndex == (Model.TotalPages > 0 ? Model.TotalPages : 1) ? "disabled" : "")">
+            <a class="page-link" href="@Url.Page(null, null, new {
+                SearchName = Request.Query["SearchName"],
+                DateFrom = Request.Query["DateFrom"],
+                DateTo = Request.Query["DateTo"],
+                PageIndex = Model.PageIndex + 1,
+                PageSize = Model.PageSize
+            }, null)">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+
+
+
+        </div>
+    </div>
+
+    <!-- Modal Upload -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadModalLabel">Tải CV mới lên</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="File" class="form-label">Chọn file CV (PDF)</label>
+                            <input type="file" class="form-control" id="File" name="File" accept="application/pdf" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="CVName" class="form-label">Tên CV</label>
+                            <input type="text" class="form-control" id="CVName" name="CVName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="Notes" class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="Notes" name="Notes"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success">Tải lên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Edit">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Chỉnh sửa tên CV Upload</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="EditCvId" name="CvId" />
+                        <div class="mb-3">
+                            <label for="EditFileName" class="form-label">Tên CV</label>
+                            <input type="text" class="form-control" id="EditFileName" name="CVName" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Delete">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa CV?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="DeleteCvId" name="CvId" />
+                        <p>Hành động này sẽ xóa vĩnh viễn CV khỏi hệ thống.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xóa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="uploadSpinner" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(255,255,255,0.7);align-items:center;justify-content:center;flex-direction:column;">
+  <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;">
+    <span class="visually-hidden">Đang tải lên...</span>
+  </div>
+  <div style="margin-top:16px;font-size:18px;">Đang tải lên CV, vui lòng chờ...</div>
+</div>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+@section Scripts {
+    <script>
+        var editModal = document.getElementById('editModal');
+        editModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var cvId = button.getAttribute('data-cvid');
+            var fileName = button.getAttribute('data-filename');
+            document.getElementById('EditCvId').value = cvId;
+            document.getElementById('EditFileName').value = fileName;
+        });
+        var deleteModal = document.getElementById('deleteModal');
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var cvId = button.getAttribute('data-cvid');
+            document.getElementById('DeleteCvId').value = cvId;
+        });
+
+        const uploadForm = document.querySelector('form[enctype="multipart/form-data"]');
+        if (uploadForm) {
+          uploadForm.addEventListener('submit', function() {
+            document.getElementById('uploadSpinner').style.display = 'flex';
+          });
+        }
+        window.addEventListener('pageshow', function() {
+          document.getElementById('uploadSpinner').style.display = 'none';
+        });
+
+        // Convert all .cv-date elements to local time
+        document.querySelectorAll('.cv-date').forEach(function(el) {
+            var utc = el.getAttribute('data-utc');
+            if (utc) {
+                var d = new Date(utc);
+                if (!isNaN(d)) {
+                    el.textContent = d.toLocaleString();
+                }
+            }
+        });
+    </script>
+}

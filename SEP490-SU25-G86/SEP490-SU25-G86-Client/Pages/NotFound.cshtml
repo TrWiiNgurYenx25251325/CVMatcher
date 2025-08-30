@@ -1,0 +1,25 @@
+@page
+@model SEP490_SU25_G86_Client.Pages.NotFoundModel
+@{
+    Layout = null;
+    ViewData["Title"] = "404 - Không tìm thấy trang";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 - Không tìm thấy trang</title>
+    <link rel="stylesheet" href="~/css/NotFound.css" />
+</head>
+<body>
+    <div style="text-align:center; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
+        <img src="/assets/images/art error GIF by kidmograph.gif" alt="Error Animation" style="max-width:90vw; max-height:70vh; width:auto; height:auto; margin-bottom:32px;" />
+        <p style="font-size:1.5rem;color:#555; margin-bottom:32px;">Không tìm thấy trang hoặc bạn không có quyền truy cập</p>
+        <a href="/Common/Homepage" style="display:inline-block;padding:12px 36px;background:#33aaff;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:1.1rem;box-shadow:0 4px 12px rgba(51,170,255,0.2);transition:all 0.2s ease;">
+            🔙 Quay về trang chủ
+        </a>
+    </div>
+</body>
+</html>

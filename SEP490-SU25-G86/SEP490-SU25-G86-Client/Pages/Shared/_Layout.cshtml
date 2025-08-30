@@ -1,0 +1,426 @@
+@using System.Security.Claims
+@inject IConfiguration Config
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CVMatcher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* <link rel="stylesheet" href="~/SEP490_SU25_G86_Client.styles.css" asp-append-version="true" />
+    <link href="~/css/index.css" rel="stylesheet" /> *@
+</head>
+<body>
+    <header>
+        <div class="container-fluid header-container">
+            <div class="logo">
+                <a asp-page="/Index">
+                    <img src="~/assets/images/LogoCVM.png" alt="CVMatcher Logo" style="height:48px; width:auto; display:inline-block; vertical-align:middle;" />
+                </a>
+
+            </div>
+            @{
+                var userRole = Context.Session.GetString("user_role");
+            }
+
+            @if (userRole != "ADMIN")
+            {
+                <div class="nav">
+                    <a asp-page="/Index">Trang chủ</a>
+                    <a asp-page="/Common/ListJobs">Tìm việc làm</a>
+                    <a asp-page="/CVTemplatesByPosition">Mẫu CV</a>
+                    <a asp-page="/Companies/ListCompany">Danh sách công ty</a>
+                    <a asp-page="/CareerHandbook/List">Cẩm nang nghề nghiệp</a>
+
+                    <!-- Dropdown Công Cụ -->
+                    <div class="dropdown user-dropdown">
+                        <a href="#" class="dropdown-toggle d-flex align-items-center"
+                           id="userDropdown"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            Công Cụ
+                        </a>
+                        <ul class="dropdown-menu mt-2" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" asp-page="/Tools/Salary">Tính lương Gross - Net</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-page="/Tools/Tax">Tính thuế thu nhập cá nhân</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-page="/Tools/Interest">Tính lãi suất kép</a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                    <a asp-page="/Common/Contact">Liên hệ</a>
+                </div>
+            }
+
+            <div class="header-actions" >
+                @{
+                    var isLoggedIn = !string.IsNullOrEmpty(userRole);
+                }
+                @if (isLoggedIn && userRole == "CANDIDATE")
+                {
+                    <!-- Notification Bell -->
+                    <div class="dropdown notification-dropdown me-3"
+                         data-user-id="@(Context.Session.GetInt32("user_id")?.ToString()
+                                         ?? Context.Session.GetString("userId")
+                                         ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                         ?? "")"
+                         data-api="@(Config["ApiBaseUrl"] ?? "")"
+                         data-token="@(Context.Session.GetString("jwt_token") ?? "")">
+                        <a href="#" class="position-relative d-flex align-items-center" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                            <i class="bi bi-bell fs-4"></i>
+                            <span id="notifDot" class="notif-dot d-none"></span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end mt-2 p-0" aria-labelledby="notifDropdown"
+                             style="width:380px; max-height:480px; overflow:auto;">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <div class="fw-semibold">Thông báo</div>
+                                <button class="btn btn-sm btn-link" id="btnRefreshNotif">Làm mới</button>
+                            </div>
+                            <div id="notifList" class="list-group list-group-flush">
+                                <div class="p-3 text-muted small">Đang tải…</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Notification Bell -->
+
+
+                    <div class="dropdown user-dropdown">
+                        <a href="#" class="d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="userAvatar" src="~/assets/images/default-avatar.png" alt="Avatar" class="rounded-circle" style="width:36px; height:36px; object-fit:cover;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown">
+                            
+                            <li><a class="dropdown-item" asp-page="/Candidate/SavedJobs">Việc làm đã lưu</a></li>
+                            <li><a class="dropdown-item" asp-page="/Candidate/AppliedJobs">Việc làm đã ứng tuyển</a></li>
+                            <li><a class="dropdown-item" asp-page="/Common/MyCVs">CV của tôi</a></li>
+                            <li><a class="dropdown-item" asp-page="/Companies/FollowedCompanies">Doanh nghiệp đang theo dõi</a></li>
+                            <li><a class="dropdown-item" asp-page="/Candidate/BlockedCompanies">Doanh nghiệp bị hạn chế</a></li>
+                            <li><a class="dropdown-item" asp-page="/Common/SettingProfile">Cài đặt thông tin cá nhân</a></li>
+                            <li><a class="dropdown-item" asp-page="/Common/ChangePassword">Đổi mật khẩu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" asp-page="/Common/Logout">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                }
+                else if (isLoggedIn && userRole == "EMPLOYER")
+                {
+                    <!-- Notification Bell -->
+                    <div class="dropdown notification-dropdown me-3"
+                         data-user-id="@(Context.Session.GetInt32("user_id")?.ToString()
+                                         ?? Context.Session.GetString("userId")
+                                         ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                         ?? "")"
+                         data-api="@(Config["ApiBaseUrl"] ?? "")"
+                         data-token="@(Context.Session.GetString("jwt_token") ?? "")">
+                        <a href="#" class="position-relative d-flex align-items-center" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                            <i class="bi bi-bell fs-4"></i>
+                            <span id="notifDot" class="notif-dot d-none"></span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end mt-2 p-0" aria-labelledby="notifDropdown"
+                             style="width:380px; max-height:480px; overflow:auto;">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <div class="fw-semibold">Thông báo</div>
+                                <button class="btn btn-sm btn-link" id="btnRefreshNotif">Làm mới</button>
+                            </div>
+                            <div id="notifList" class="list-group list-group-flush">
+                                <div class="p-3 text-muted small">Đang tải…</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Notification Bell -->
+
+
+                    <div class="dropdown user-dropdown">
+                        <a href="#" class="d-flex align-items-center" id="employerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="userAvatar" src="~/assets/images/default-avatar.png" alt="Avatar" class="rounded-circle" style="width:36px; height:36px; object-fit:cover;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="employerDropdown">      
+                            <li><a class="dropdown-item" asp-page="/Employer/ListJobCriteria">Chiến dịch tuyển dụng</a></li>
+                            <li><a class="dropdown-item" asp-page="/Employer/ListJobByEmployer">Danh sách bài đăng tuyển dụng</a></li>
+                            <li><a class="dropdown-item" asp-page="/Employer/MyCVTemplates">Quản lý CV Template</a></li>
+                            <li class="dropdown-submenu position-relative">
+                                <a class="dropdown-item dropdown-toggle" href="#" id="accountSettingDropdown" data-bs-toggle="dropdown" aria-expanded="false">Cài đặt tài khoản</a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountSettingDropdown" style="left:auto; right:100%; top:0; min-width:200px;">
+                                    <li><a class="dropdown-item" asp-page="/Common/SettingProfile">Cài đặt thông tin cá nhân</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Common/ChangePassword">Đổi mật khẩu</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Companies/CompanyInformation">Thông tin công ty</a></li>
+                                </ul>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" asp-page="/Common/Logout">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                }
+                else if (isLoggedIn && userRole == "ADMIN")
+                {
+                    <div>
+                        <a class="btn btn-outline-danger ms-3" asp-page="/Common/Logout">Đăng xuất</a>
+                    </div>
+                }
+                else
+                {
+                    <a asp-page="/Common/register" class="btn btn-outline-light ms-3">Đăng ký</a>
+                    <a asp-page="/Common/Login" class="btn btn-success ms-2">Đăng nhập</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+
+    <!-- Nhúng Google Font Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container">
+            <div class="row">
+                <!-- Thông tin công ty -->
+                <div class="col-md-8">
+                    <h5 class="fw-bold">Công ty CvMatcher</h5>
+                    <p><i class="bi bi-file-earmark-text-fill text-primary me-2"></i>Giấy phép đăng ký kinh doanh số: <strong>0123456789</strong></p>
+                    <p><i class="bi bi-file-earmark-check-fill text-success me-2"></i>Giấy phép hoạt động dịch vụ việc làm số: <strong>23/CVMT-HRGP</strong></p>
+                    <p><i class="bi bi-geo-alt-fill text-danger me-2"></i>Trụ sở chính: Số 12, ngõ 123 Trần Duy Hưng, Quận Cầu Giấy, Hà Nội</p>
+                </div>
+
+                <!-- QR + link -->
+                <div class="col-md-4 text-center">
+                  
+                    <p><a href="https://cvmatcher.net" class="text-primary fw-semibold text-decoration-none">cvmatcher.net</a></p>
+                    <p><a href="/Common/About" class="text-primary fw-semibold text-decoration-none">Giới thiệu</a></p>
+                    <p><a href="/Common/Contact" class="text-primary fw-semibold text-decoration-none">Liên hệ</a></p>
+                    <p><a href="/Common/TermsOfService" class="text-primary fw-semibold text-decoration-none">Điều khoản dịch vụ</a></p>
+                </div>
+            </div>
+
+            <!-- Dịch vụ & liên hệ -->
+            <h6 class="fw-bold mt-4 mb-3">Kênh liên hệ & dịch vụ hỗ trợ của CvMatcher</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="footer-card blue">
+                        <i class="bi bi-telephone-fill me-2"></i> Hỗ trợ trực tiếp:
+                        <div class="fw-bold fs-6 mt-1">0961 075 000</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="footer-card yellow">
+                        <i class="bi bi-envelope-fill me-2"></i> Email CSKH:
+                        <div class="fw-bold fs-6 mt-1">thandea6@gmail.com</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="footer-card pink">
+                        <i class="bi bi-facebook me-2"></i> Fanpage Facebook:
+                        <div><a href="https://facebook.com/cvmatcher" class="text-dark text-decoration-underline">facebook.com/cvmatcher</a></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="footer-card green">
+                        <i class="bi bi-globe2 me-2"></i> Website chính thức:
+                        <div><a href="https://cvmatcher.net" class="text-dark text-decoration-underline">cvmatcher.net</a></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bản quyền -->
+            <div class="text-center mt-4 text-muted small">
+                &copy; 2025 CvMatcher. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+
+
+
+
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>s
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    <script>
+        (function(){
+          const wrap  = document.querySelector('.notification-dropdown');
+          if(!wrap) return;
+
+          const elBellDot  = document.getElementById('notifDot');
+          const elList     = document.getElementById('notifList');
+          const btnRefresh = document.getElementById('btnRefreshNotif');
+
+          // lấy config từ data-attr
+          const apiBase = (wrap.dataset.api || '').replace(/\/+$/,''); // https://localhost:7004
+          const bearer  = wrap.dataset.token || null;
+
+          let userId = parseInt(wrap.dataset.userId || '', 10);
+          if (Number.isNaN(userId)) userId = null;
+
+          // Không ẩn chuông nếu chưa có userId; chỉ không gọi API/Hub
+          init();
+
+          async function init(){
+            if(!apiBase){
+              console.warn('Missing ApiBaseUrl on bell.');
+              return;
+            }
+            if(!userId){
+              elList.innerHTML = `<div class="p-3 text-muted small">Đăng nhập để xem thông báo.</div>`;
+              return;
+            }
+            await loadNotifications();
+            await startHub();
+            btnRefresh?.addEventListener('click', e => { e.preventDefault(); loadNotifications(); });
+          }
+
+          async function loadNotifications(){
+            try{
+              const res = await fetch(`${apiBase}/api/Notifications/${userId}?take=20`, {
+                headers: bearer ? { 'Authorization': `Bearer ${bearer}` } : {}
+              });
+              if(!res.ok) throw new Error('Load notifications failed');
+              const data = await res.json();
+              renderList(data);
+              updateDot(data);
+            }catch(e){
+              elList.innerHTML = `<div class="p-3 text-danger small">Không tải được thông báo.</div>`;
+              console.error(e);
+            }
+          }
+
+          async function startHub(){
+            const hub = new signalR.HubConnectionBuilder()
+                      .withUrl(`${apiBase}/hubs/notifications`, { accessTokenFactory: () => bearer })
+
+              .withAutomaticReconnect()
+              .build();
+
+            // debug trạng thái kết nối
+            hub.onreconnecting(err => console.warn('hub reconnecting', err));
+            hub.onreconnected(id => console.log('hub reconnected', id));
+            hub.onclose(err => console.warn('hub closed', err));
+
+            hub.on("ReceiveNotification", (n) => {
+              if(!n) return;
+              appendItem(n, true);
+              elBellDot.classList.remove('d-none');
+            });
+
+            hub.on("NotificationMarkedRead", (id) => {
+              const el = document.querySelector(`.notification-item[data-id="${id}"]`);
+              if (el) el.classList.remove('unread');
+              recalcDot(); // tính lại chấm đỏ dựa trên item .unread còn lại
+            });
+            hub.start().catch(console.error);
+          }
+             
+
+
+          function updateDot(items){
+            elBellDot.classList.toggle('d-none', !(items||[]).some(x => !x.isRead));
+          }
+
+          function renderList(items){
+            if(!items || items.length === 0){
+              elList.innerHTML = `<div class="p-3 text-muted small">Chưa có thông báo nào.</div>`;
+              return;
+            }
+            elList.innerHTML = '';
+            items.forEach(n => appendItem(n, false));
+          }
+
+          function appendItem(n, prepend){
+            const a = document.createElement('a');
+            a.className = `list-group-item list-group-item-action notification-item ${n.isRead ? '' : 'unread'}`;
+            a.dataset.id  = n.notificationId;
+            a.dataset.url = n.targetUrl || '';
+            a.innerHTML = `
+              <div class="p-2">
+                <div class="notification-content">${escapeHtml(n.content)}</div>
+                <div class="text-muted small mt-1">${formatDate(n.createdAt)}</div>
+              </div>`;
+            a.addEventListener('click', () => onClickItem(n));
+            prepend ? elList.prepend(a) : elList.appendChild(a);
+          }
+
+          function onClickItem(n){
+            // mark read (fire-and-forget)
+            fetch(`${apiBase}/api/Notifications/${n.notificationId}/read?userId=${userId}`, {
+              method:'PUT',
+              headers: bearer ? { 'Authorization': `Bearer ${bearer}` } : {}
+            }).catch(()=>{});
+            if(n.targetUrl) window.location.href = n.targetUrl;
+          }
+
+          // helpers
+          function formatDate(d){ try{ return new Date(d).toLocaleString(); }catch{ return ''; } }
+          function escapeHtml(s){ return (s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+        })();
+        
+    </script>
+    <script>
+ (async function () {
+    const wrap = document.querySelector('.notification-dropdown');
+    if (!wrap) {
+        console.warn("Notification dropdown element not found.");
+        return;
+    }
+
+    const apiBase = (wrap.dataset.api || '').replace(/\/+$/, '');
+    const bearer = wrap.dataset.token || null;
+    if (!apiBase || !bearer) {
+        console.warn("API base URL or token missing.");
+        return;
+    }
+
+    const userAvatar = document.getElementById("userAvatar");
+    if (!userAvatar) {
+        console.warn("Avatar image element not found.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${apiBase}/api/User/profile`, {
+            headers: { 'Authorization': `Bearer ${bearer}` }
+        });
+        if (!res.ok) throw new Error(`Failed to load profile: ${res.status}`);
+
+        const profile = await res.json();
+        console.log("Profile data:", profile);
+
+        if (profile?.avatar) {
+            console.log("Attempting to load avatar:", profile.avatar);
+            userAvatar.src = profile.avatar;
+            userAvatar.onerror = () => {
+                console.warn("Failed to load avatar image, using default.");
+                userAvatar.src = "/assets/images/default-avatar.png"; // Adjust path as needed
+            };
+        } else {
+            console.log("No avatar URL, using default.");
+            userAvatar.src = "/assets/images/default-avatar.png"; // Adjust path as needed
+        }
+    } catch (e) {
+        console.warn("Error fetching profile:", e);
+        userAvatar.src = "/assets/images/default-avatar.png"; // Adjust path as needed
+    }
+})();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+</html>

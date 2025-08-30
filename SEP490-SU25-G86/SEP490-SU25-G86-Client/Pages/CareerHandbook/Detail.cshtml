@@ -1,0 +1,79 @@
+﻿@page "{slug}"
+@model SEP490_SU25_G86_Client.Pages.CareerHandbook.DetailModel
+@{
+    ViewData["Title"] = Model.CareerHandbook?.Title ?? "Chi tiết cẩm nang";
+}
+
+<section class="container my-5">
+    @if (Model.CareerHandbook == null)
+    {
+        <div class="alert alert-danger">Không tìm thấy bài viết.</div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <h2 class="fw-bold">@Model.CareerHandbook.Title</h2>
+            <p class="text-muted">
+                <i class="bi bi-calendar-event"></i>
+                @Model.CareerHandbook.CreatedAt.ToString("dd/MM/yyyy") |
+                <span class="badge bg-secondary">@Model.CareerHandbook.CategoryName</span>
+            </p>
+        </div>
+
+        <div class="mb-4 text-center">
+            <img src="@(string.IsNullOrEmpty(Model.CareerHandbook.ThumbnailUrl)
+                        ? Url.Content("~/assets/images/default_thumbnail_careerhandbook.png")
+                        : Model.CareerHandbook.ThumbnailUrl)"
+                 alt="@Model.CareerHandbook.Title"
+                 class="img-fluid rounded shadow-sm"
+                 style="max-height:400px; object-fit:cover;" />
+        </div>
+
+        <article class="mb-5" style="line-height:1.7; white-space:pre-line;">
+            @Html.Raw(Model.CareerHandbook.Content)
+        </article>
+   
+
+        <!-- Gợi ý bài viết -->
+        @if (Model.SuggestedHandbooks != null && Model.SuggestedHandbooks.Any())
+        {
+            <section class="container my-5">
+                <h4 class="fw-bold mb-4">Bài viết gợi ý</h4>
+                <div class="row g-4">
+                    @foreach (var post in Model.SuggestedHandbooks)
+                    {
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <img src="@(string.IsNullOrEmpty(post.ThumbnailUrl)
+                                            ? Url.Content("~/assets/images/default_thumbnail_careerhandbook.png")
+                                            : post.ThumbnailUrl)"
+                                     class="card-img-top"
+                                     alt="@post.Title"
+                                     style="height:180px;object-fit:cover;" />
+
+                                <div class="card-body">
+                                    <span class="badge bg-secondary mb-2">@post.CategoryName</span>
+                                    <h6 class="card-title fw-bold">
+                                        <a asp-page="/CareerHandbook/Detail"
+                                           asp-route-slug="@post.Slug"
+                                           class="text-decoration-none text-dark">
+                                            @post.Title
+                                        </a>
+                                    </h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-calendar-event"></i> @post.CreatedAt.ToString("dd/MM/yyyy")
+                                    </p>
+                                    <p class="text-truncate mb-0" style="max-height:40px;">
+                                        @Html.Raw(post.Content?.Length > 80 ? post.Content.Substring(0, 80) + "..." : post.Content)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    }
+</section>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

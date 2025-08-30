@@ -1,0 +1,63 @@
+﻿@page "{id:int}"
+@model SEP490_SU25_G86_Client.Pages.CareerHandbook.UpdateCareerHandbookModel
+@{
+    ViewData["Title"] = "Cập nhật Cẩm nang";
+}
+
+<div class="container my-4">
+    <h3>Cập nhật Cẩm nang</h3>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Handbook.Title" class="form-label">Tiêu đề</label>
+            <input asp-for="Handbook.Title" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Handbook.Slug" class="form-label">Slug</label>
+            <input asp-for="Handbook.Slug" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Handbook.CategoryId" class="form-label">Danh mục</label>
+            <select asp-for="Handbook.CategoryId" class="form-select" asp-items="Model.CategorySelectList">
+                <option value="">-- Chọn danh mục --</option>
+            </select>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Handbook.Content" class="form-label">Nội dung</label>
+            <textarea asp-for="Handbook.Content" class="form-control" rows="6"></textarea>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Ảnh Thumbnail hiện tại</label>
+            @if (!string.IsNullOrEmpty(Model.Handbook.ThumbnailUrl))
+            {
+                <div>
+                    <img src="@Model.Handbook.ThumbnailUrl" alt="Thumbnail" class="img-thumbnail" style="max-height:150px;" />
+                </div>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Handbook.ThumbnailFile" class="form-label">Chọn ảnh mới</label>
+            <input asp-for="Handbook.ThumbnailFile" type="file" class="form-control" accept="image/*" />
+        </div>
+
+
+        <div class="col-md-6">
+            <label asp-for="Handbook.Tags" class="form-label">Tags</label>
+            <input asp-for="Handbook.Tags" class="form-control" />
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Handbook.IsPublished" class="form-label">Xuất bản?</label>
+            <input asp-for="Handbook.IsPublished" type="checkbox" />
+        </div>
+
+        <div class="col-12">
+            <button class="btn btn-primary">Cập nhật</button>
+            <a asp-page="/CareerHandbook/ListCareerHandbook" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
